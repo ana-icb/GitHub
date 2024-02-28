@@ -1,0 +1,176 @@
+---
+title: "PEC0"
+author: "UOC"
+date: "Primavera 2023"
+output: 
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+---
+
+
+******
+# Objetivos del aprendizaje
+******
+
+El objetivo de esta actividad es que introducir al estudiante en el manejo básico de R para el tratamiento de datos. 
+
+En esta PEC utilizaremos el conjunto de datos 'train.csv' sobre datos de móviles.  
+
+Es una tabla de datos donde las filas representan móviles y las columnas características de dichos móviles.
+
+Las variables o características de dichos móviles que nos interesan son las siguientes: 
+
+1) battery_power: energía total que una batería puede almacenar en un ciclo medida en mAh.
+2) blue: variable binaria que indica si el móvil tiene bluetooth (1) o no (0).
+3) clock_speed: velocidad a la que el microprocesador ejecuta las instrucciones.
+4) dual_sim: variable binaria que indica si el móvil tiene sim dual (1) o no (0).
+5) fc: mega pixels de la cámara frontal.
+6) four_g: variable binaria que indica si el móvil tiene 4G (1) o no (0).
+7) int_memory: memoria interna del móvil en Gigabytes.
+8) m_dep: anchura del móvil en cm.
+9) mobile_wt: peso del móvil. 
+10) n_cores: número del cores del móvil.
+11) ram: memoria ram del móvil.
+12) wifi: variable binaria que indica si el móvil tiene wifi (1) o no (0).
+13) price_range: variable ordinal que nos indica el rango de precios donde está situado el móvil donde 0 sería el rango más barato y 3 el rango más caro.
+
+Se pueden consultar en 
+https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification
+
+
+******
+# Preparar el conjunto de datos (2 puntos)
+******
+
+<ul>
+<li>Lee el fichero de datos `train.csv` y guarda los datos en un objeto con identificador `moviles.train`.  
+<li>Describe brevemente la base de datos y los campos que contiene.
+</ul>
+
+## Solución {-}
+
+```{r}
+setwd("C:/Users/capot/OneDrive/Escritorio/UOC/ASIGNATURAS/Análisis Estadístico y Programación con R/PEC 0")
+```
+
+
+```{r}
+moviles.train<-read.table("train.csv", header=TRUE,
+sep=",", dec=".") 
+```
+
+#Tenemos una base de datos, fichero 'csv', que nos proporciona información sobre móviles, de los cuales vemos sus características bien detalladas en las columnas, como pueden ser las características de la batería, si el móvil tiene bluetooth o no (con la variable binaria que nos lo indica), velocidad del microprocesador, si tiene sim dual, las características de la cámara frontal, si tiene 4G o no, las características de su memoria interna, el ancho del móvil, su peso, el número de cores, la memoria RAM, el ancho y el largo de su pantalla, así como si es táctil o no, el tiempo durante el cual podemos hablar (llamadas), si tienen wifi o no y el rango de precios en el que se encuentran que va del 0 al 3, donde 0 indica que ha sido un móvil barato y 3 que ha sido el más caro.
+
+
+```{r}
+str(moviles.train)
+```
+#Utilizamos la función "str" para saber la estructura de nuestra base de datos que, como primera información tenemos que se trata de un formato 'data.frame'con 2000 observaciones y 21 variables o, lo que también podemos considerar en 2000 filas y 21 columnas. Con esta función vemos el nombre de cada columna, los tipos de datos de cada una de ellas que, en nuestro caso la mayoría son variables numéricas enteras ('int'), menos dos (las columnas $clock_speed que es 'num', al igual que la columna $m_dep, lo cual quiere decir que tienen valores decimales). Además, esta función nos muestra algunos valores de cada columna, es decir, algunas filas, para que podamos tener una idea general de nuestra base de datos.
+
+```{r}
+summary(moviles.train)
+```
+#Ahora hemos utilizado la función 'summary', con la cual obtenemos información estadística sobre nuestra base de datos, muy útil para trabajar más adelante, y así podemos observar los nombres de cada columna con su mínimo, su primer cuartil, el segundo (que es la mediana), su media, el tercer cuartil y su máximo. 
+
+
+******
+# Transformar variables (3 puntos)
+******
+
+Ahora vamos a realizar algunas transformaciones en los datos
+<ul>
+<li>Cambia el nombre de la variable `bateria_power` por `bateria`.
+<li>Transforma la variable `price_range` a factor y cambia sus valores por `PB` (precio barato), `PM` (precio medio), `PMA` (precio medio alto) y `PA` (precio alto.
+<li>Comprueba que todas las transformaciones se hayan realizado correctamente.
+</ul>
+
+## Solución {-}
+
+```{r}
+names(moviles.train)[1]<-"bateria"
+names(moviles.train)
+```
+
+```{r}
+require(dplyr)
+```
+
+
+```{r}
+moviles.train$price_range = factor(moviles.train$price_range, order=TRUE)
+
+levels(moviles.train$price_range)=c("PB", "PM", "PMA", "PA")
+```
+
+
+```{r}
+moviles.train$price_range
+```
+
+```{r}
+class(moviles.train$price_range)
+```
+
+
+```{r}
+levels(moviles.train$price_range)
+```
+
+******
+# Crear variables (5 puntos)
+******
+
+Ahora vamos a crear nuevas variables a partir de las que ya tenemos.
+<ul>
+<li> Crea una nueva variable categórica llamada `nivel_bateria` que sea una recodificación de la variable `batería` en cuatro grupos: 
+  <ul>
+  <li> "DP" (poca duración) para aquellos móviles cuyos valores de la batería estén entre el mínimo y el primer cuartil de la variable.
+  <li> "DMB" (duración media baja) para aquellos móviles cuyos valores de la batería estén entre el primer cuartil y el segundo cuartil (mediana) de la variable.
+  <li> "DMA" (duración media alta) para aquellos móviles cuyos valores de la batería estén entre el segundo cuartil (mediana) y el tercer cuartil de la variable.
+  <li> "DA" (duración alta) para aquellos móviles cuyos valores de la batería estén entre el tercer quartil y el máximo de la variable.
+  </ul>
+<li>Crea una nueva variable llamada `COMBI` que combine los valores posibles de la variable anterior y la variable `price_range`.
+<li>Comprueba que todas las transformaciones se hayan realizado correctamente.
+</ul>
+
+## Solución {-}
+
+```{r}
+summary(moviles.train$bateria)
+```
+
+
+```{r}
+valores = summary(moviles.train$bateria)
+```
+
+
+```{r}
+moviles.train$nivel_bateria<-cut(moviles.train$bateria,c(valores[1],valores[2],valores[3],valores[5],valores[6]),
+                  labels=c("DP","DMB","DMA","DA"),include.lowest = TRUE)
+```
+
+```{r}
+require(tidyr)
+```
+```{r}
+moviles.train$nivel_bateria
+```
+
+
+```{r}
+moviles.train<-moviles.train %>% unite(price_range,nivel_bateria,col=combi,sep="_",remove=FALSE)
+```
+
+```{r}
+moviles.train$combi
+```
+
+```{r}
+class(moviles.train$combi)
+```
+
