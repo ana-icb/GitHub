@@ -1,0 +1,325 @@
+---
+title: "PEC1"
+author: "UOC"
+date: "Primavera 2023"
+output: 
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+editor_options: 
+  chunk_output_type: inline
+---
+
+
+******
+# Objetivos del aprendizaje
+******
+
+El objetivo de esta actividad es que introducir al estudiante en el análisis descriptivo de los datos con `R`.
+
+En esta PEC seguiremos utilizando el conjunto de datos 'train.csv' sobre datos de móviles.  
+
+Recordemos que es una tabla de datos donde las filas representan móviles y las columnas características de dichos móviles.
+
+Las variables o características de dichos móviles que nos interesan son las siguientes: 
+
+1) battery_power: energía total que una batería puede almacenar en un ciclo medida en mAh.
+2) blue: variable binaria que indica si el móvil tiene bluetooth (1) o no (0).
+3) clock_speed: velocidad a la que el microprocesador ejecuta las instrucciones.
+4) dual_sim: variable binaria que indica si el móvil tiene sim dual (1) o no (0).
+5) fc: mega pixels de la cámara frontal.
+6) four_g: variable binaria que indica si el móvil tiene 4G (1) o no (0).
+7) int_memory: memoria interna del móvil en Gigabytes.
+8) m_dep: anchura del móvil en cm.
+9) mobile_wt: peso del móvil. 
+10) n_cores: número del cores del móvil.
+11) ram: memoria ram del móvil.
+12) wifi: variable binaria que indica si el móvil tiene wifi (1) o no (0).
+13) price_range: variable ordinal que nos indica el rango de precios donde está situado el móvil donde 0 sería el rango más barato y 3 el rango más caro.
+
+Se pueden consultar en 
+https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification
+
+
+
+
+******
+# Preparar el conjunto de datos (0.5 puntos)
+******
+
+<ul>
+<li>Para realizar esta PEC, puedes partir del objeto `moviles.train` generado como resultado de la PEC0
+<li>Si no realizaste la PEC0, lee el fichero `train.csv` y guarda los datos en un objeto con identificador `moviles.train`, y posteriormente aplica las transformaciones que se proponían en la PEC0 para hallar el objecto `móviles train` (puedes utilizar la solución propuesta en el Aula)
+</ul>
+
+## Solución {-}
+
+
+
+```{r}
+ setwd("C:/Users/capot/OneDrive/Escritorio/UOC/ASIGNATURAS/Análisis Estadístico y Programación con R/PEC 0/PEC 0 - Análisis Estadístico y Programación con R - B0.473 - Ana Ivis Capote Benaiges")
+```
+
+
+```{r}
+moviles.train<-read.table("train.csv", header=TRUE,
+sep=",", dec=".") 
+```
+
+
+```{r}
+names(moviles.train)[1]<-"bateria"
+names(moviles.train)
+```
+```{r}
+require(dplyr)
+```
+
+```{r}
+moviles.train$price_range = factor(moviles.train$price_range, order=TRUE)
+
+levels(moviles.train$price_range)=c("PB", "PM", "PMA", "PA")
+```
+
+
+```{r}
+moviles.train$price_range
+```
+
+```{r}
+class(moviles.train$price_range)
+```
+
+```{r}
+levels(moviles.train$price_range)
+```
+
+```{r}
+summary(moviles.train$bateria)
+```
+
+```{r}
+valores = summary(moviles.train$bateria)
+```
+
+
+```{r}
+moviles.train$nivel_bateria<-cut(moviles.train$bateria,c(valores[1],valores[2],valores[3],valores[5],valores[6]),
+                  labels=c("DP","DMB","DMA","DA"),include.lowest = TRUE)
+```
+
+
+```{r}
+require(tidyr)
+```
+
+```{r}
+moviles.train$nivel_bateria
+```
+
+```{r}
+moviles.train<-moviles.train %>% unite(price_range,nivel_bateria,col=combi,sep="_",remove=FALSE)
+```
+
+
+```{r}
+moviles.train$combi
+```
+```{r}
+class(moviles.train$combi)
+```
+
+******
+# Ordenar valores (1.5 puntos)
+******
+
+<ul>
+<li>¿Cuáles son los 20 móviles con mayor duración de la batería? Mostrar en la salida todos los valores de las variables de los 20 móviles.
+<li>Indicar cúantos de los 20 móviles tienen bluetooth.
+</ul>
+
+
+## Solución {-}
+
+```{r}
+mayor_duracion_bateria20<-moviles.train[order(-moviles.train$bateria),][1:20,]
+```
+
+
+```{r}
+mayor_duracion_bateria20
+```
+
+```{r}
+sum(mayor_duracion_bateria20$blue == 1)
+```
+
+******
+# Estadísticas descriptivas (3 puntos)
+******
+
+<ul>
+<li> Calcular la media y desviación estándar del peso de los móviles.
+<li> Dibujar un boxplot del peso de los móviles e interpretarlo.
+<li> Dibujar un diagrama de barras que muestre el porcentaje que tienen cada uno de los valores posibles de la variable COMBI creada en la PEC0. Interpretar los resultados respondiendo a preguntas del tipo ¿qué tipo de móvil es más abundante y menos?
+</ul>
+
+
+## Solución {-}
+
+```{r}
+summary(moviles.train$mobile_wt)
+```
+```{r}
+class(moviles.train$mobile_wt)
+```
+
+```{r}
+mobile_wt_mean<-mean(moviles.train$mobile_wt, na.rm = TRUE)
+```
+
+
+```{r}
+mobile_wt_sd<-sd(moviles.train$mobile_wt, na.rm = TRUE)
+```
+
+
+```{r}
+boxplot(moviles.train$mobile_wt)
+```
+
+
+## El diagrama de caja que hemos dibujado representa la variable 'moviles.train$mobile_wt', que es cuantitativa y, en este caso, tiene valores 'integer'. Con este gráfico podemos visualizar los datos estadísticos de esta variable, como son el mínimo y el máximo, la media, la mediana y los cuartiles, es decir, la información que obtenemos mediante la función 'summary', pero graficada con la función 'boxplot'.
+
+## En el caso de la variable 'moviles.train$mobile_wt', los bordes superior e inferior de la caja (la altura de la caja), representan el primero y el tercer cuartil respectivamente. Dentro de la caja, la línea gruesa representa la mediana de esta variable; los valores que marcan los números 80 y el 200 en el gráfico, son el mínimo y el máximo respectivamente, y se denominan "bigotes", los cuales, como podemos apreciar, no están muy alejados de la caja intercuartílica. Por otra parte, vemos que no tenemos valores atípicos. 
+
+
+```{r}
+class(moviles.train$combi)
+```
+
+```{r}
+barplot(prop.table(table(moviles.train$combi)), las = 2, cex.names = 1)
+```
+
+
+
+## En el gráfico que dibujamos, tenemos que el tipo de móvil más abundante es el que tiene la clasificación de "PA_DA", que son los que tienen el precio más alto y una duración alta de la batería (esto podría ser el resultado de una alta demanda de ese tipo de móviles, pero tampoco podemos sacar conclusiones sin poner los datos en contexto o hacer un análisis global de todos).
+
+## Por otra parte, tenemos que el tipo de móviles menos abundante es "PA_DP", que son los que tienen un precio alto y poca duración de la batería. 
+
+## Luego vemos que el segundo más abundante es "PB_DP" (precio bajo y poca duración de la batería); y el segundo menos abundante es "PB_DA" (precio bajo y duración alta de la batería). 
+
+## Aquí pudiésemos ver una tendencia, ya que tenemos que los más abundantes tienen una relación calidad/precio bastante cercana (a duración de batería más alta: precio más elevado y, a una duración pobre de la batería, vemos un precio bajo). 
+
+## Los menos abundantes no tienen la misma correspondencia en la relación calidad/precio, pues vemos que los que aparecen en primer lugar son los que podríamos esperar a que respondieran a nuestra lógica, es decir, los móviles que tienen una duración baja de la batería con un precio alto (suponemos que la demanda de estos es baja); sin embargo, los que siguen a estos en el gráfico (en orden ascendente) son los que tienen una duración alta de la batería con un precio bajo que, de primeras llama mucho la atención por lo tentadora que resultaría la oferta, pero nuevamente, para sacar más conclusiones, debemos analizar todos los datos que tenemos en su contexto.
+
+
+****
+# Eliminación de outliers (2.5)
+****
+
+<Ul>
+<li> Eliminar los outliers de la variable mega pixels de la cámara frontal y guardar los resultados en un dataframe distinto. Llamadlo `moviles.train2`.
+<li> Comparar los boxplots de la variable memoria interna del móvil entre el dataframe original y el nuevo.
+<li> Interpretar los resultados
+</Ul>
+
+
+## Solución {-}
+
+
+```{r}
+boxplot(moviles.train$fc)
+```
+```{r}
+summary(moviles.train$fc)
+```
+
+
+```{r}
+boxplot.stats(moviles.train$fc)$out
+```
+
+```{r}
+sort(boxplot(moviles.train$fc, plot = FALSE)$out)
+```
+
+```{r}
+moviles.train2<-subset(moviles.train, moviles.train$fc > 0.00 & moviles.train$fc < 17.00, select = c(moviles.train$fc))
+```
+
+
+```{r}
+boxplot(moviles.train2$fc)
+```
+
+```{r}
+boxplot(moviles.train$fc, moviles.train2$fc, names = c('moviles.train$fc', 'moviles.train2$fc'))
+```
+
+```{r}
+summary(moviles.train$fc)
+```
+
+```{r}
+summary(moviles.train2$fc)
+```
+
+
+## El primer gráfico de caja ('moviles.train$fc') representa la variable 'moviles.train$fc' tal cual nos la proporcionaban en la tabla original, con lo que podemos visualizar que hay outliers (o datos atípicos) en dicha variable. Al eliminar dichos valores y ordenarlos de forma ascendente por defecto, como hicimos en el inciso anterior, vemos entonces que los outliers se encuentran entre el valor 17.00 y el máximo de esa variable, que es 19.00.
+
+## Por otra parte, tenemos también el gráfico de caja 'moviles.train2$fc'que grafica la variable que tiene el mismo nombre y, tanto visualmente, como al utilizar la función 'summary', obtenemos una descripción estadística totalmente distinta a la variable que tiene características similares, pero con outliers (la 'moviles.train$fc'). Vemos entonces que los valores de ambas variables son distintos, lo cual ha ocurrido al eliminar esos datos atípicos que nos mostraba el primer gráfico de este boxplot y que tienen diferentes mínimos y máximos, distintos cuartiles y que tampoco tienen los mismos valores de media y mediana.
+
+
+****
+# Agrupaciones de valores (2.5)
+****
+
+Volvemos a usar el data frame `moviles.train`. 
+Ahora vamos a utilizar la variable `price_range` que creamos en la PEC0.
+<Ul>
+<li> Obtener un resumen de valores (mínimo, cuartiles, media y máximo) de la variable memoria ram en función de los valores de la variable `price_range`. Indicación: podéis usar la función `by` de `R`.
+<li> Obtener un boxplot de la variable memoria ram en función de los valores de la variable `price_range`
+<li> Interpretar los resultados
+</Ul>
+
+
+## Solución {-}
+
+
+```{r}
+class(moviles.train$price_range)
+```
+
+```{r}
+class(moviles.train$ram)
+```
+```{r}
+levels(moviles.train$price_range)
+```
+
+
+```{r}
+by(moviles.train$ram, moviles.train$price_range, FUN = summary)
+```
+
+```{r}
+boxplot(moviles.train$ram ~ moviles.train$price_range, xlab = 'Rango de precios', ylab = 'Ram móviles', col = c('red', 'blue', 'yellow', 'green'))
+```
+
+
+
+## Al obtener un boxplot de la variable memoria ram en función de los valores de la variable 'price_range', lo primero que nos salta a la vista es el orden ascendente que siguen los diagramas de cajas a medida que el precio aumenta  y esto se debe a que, como la variable 'moviles.train$price_range' es de tipo factor, con este boxplot podemos comparar el comportamiento de la variable 'moviles.train$ram' sobre cada uno de los niveles de dicho factor que, como ya decíamos, asciende a medida que se eleva el precio. 
+
+## Luego nos fijamos en que hay datos atípicos que aparecen en tres de esos cuatro diagramas de cajas: en el que representa el precio bajo (PB), el que representa el precio medio alto (PMA) y el de los precios altos (PA). Por ejemplo, en el primer diagrama de caja hay valores que están por encima de los que marca la RAM de los móviles de precio bajo. En el tercer diagrama de caja, hay valores que están muy por debajo y muy por encima de los que representan la RAM de los móviles con precios medianamente altos (siendo más abundantes los que están inusualmente por debajo). En el último diagrama de caja, tenemos valores que están muy por debajo de la RAM de los móviles de precio alto. 
+
+## Igualmente nos llaman la atención las distancias de los bigotes en todos los gráficos, que no es simétrica, y en algunos casos se acercan o se alejan mucho de las cajas intercuartílicas.
+
+## Por otra parte, decidimos poner color a cada gráfico para poder identificarlo visualmente en caso de que vayamos a trabajar con ellos más adelante, siendo el color rojo para el precio más bajo, otros dos colores primarios para los precios intermedios y el verde para los precios más altos.
+
+
+
